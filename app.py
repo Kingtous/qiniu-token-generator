@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 
 class TokenHelper(Resource):
-    def __get__(self):
+    def get(self):
         return jsonify(token=qutil.get_token())
 
 
