@@ -1,16 +1,25 @@
 from flask import Flask, jsonify
-from flask_restful import *
-import qiniu_util as qutil
+from flask_restful import Api, Resource
+from gevent import pywsgi, monkey
+
+from constant import bucket, access_key, secret_key, expired_time
+
+monkey.patch_all()
 
 app = Flask(__name__)
+
+import qiniu
+
+q = qiniu.Auth(access_key, secret_key)
 
 
 class TokenHelper(Resource):
     def get(self):
-        return jsonify(code=0, data={"token": qutil.get_token()})
+        return jsonify(code=0, data={"token": q.upload_token(bucket=bucket, expires=expired_time)})
 
 
 if __name__ == '__main__':
     api = Api(app)
     api.add_resource(TokenHelper, '/token')
-    app.run(host="0.0.0.0", port=5002, debug=False, use_reloader=False)
+    server = pywsgi.WSGIServer(('0.0.0.0', 5002), app)
+    server.serve_forever()
